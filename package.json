@@ -1,0 +1,26 @@
+{
+  "name": "kpromise",
+  "version": "1.0.0",
+  "description": "Promise A+ 实现",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keifergu/kpromise.git"
+  },
+  "keywords": [
+    "promise"
+  ],
+  "author": "Keifer Gu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/keifergu/kpromise/issues"
+  },
+  "homepage": "https://github.com/keifergu/kpromise#readme",
+  "devDependencies": {},
+  "dependencies": {
+    "immediate": "^3.2.3"
+  }
+}
