@@ -11,7 +11,7 @@ var Utils = {
 		return val && typeof val === "function";
 	},
 	isObject: function (obj) {
-		return obj && typeof obj === "object"
+		return obj && typeof obj === "object";
 	},
 	isPromise: function (val) {
     return val && val.constructor === KPromise;
@@ -36,9 +36,9 @@ var	transition = function (state, value) {
 		return ;
 	}
 
-	this.state = state
-	this.value = value
-	this.process()
+	this.state = state;
+	this.value = value;
+	this.process();
 }
 
 var process = function () {
@@ -48,19 +48,24 @@ var process = function () {
      },
      rejectFallBack = function (reason) {
        throw reason;
-     }
+     };
 	// 最开始添加的 then 函数，此时 pengding 状态，直接返回
-	if (this.state === validStates.PENDING) return
-	Utils.runAsync(function() {
+	if (this.state === validStates.PENDING) {
+		return ;
+	}
+
+	Utils.runAsync(function () {
 		while(that.queue.length) {
 			var promiseItem = that.queue.shift(),
 				handler = null,
 				value
 			// 根据设置的状态调用对应的函数
-			if (that.state === validStates.FULFILLED)
-				handler = promiseItem.handlers.onFulfilled || fulfillFallBack // 如果对应的函数没有设置的话，则使用默认函数
-			if (that.state === validStates.REJECTED)
-				handler = promiseItem.handlers.onRejected || rejectFallBack
+			if (that.state === validStates.FULFILLED) {
+				handler = promiseItem.handlers.onFulfilled || fulfillFallBack; // 如果对应的函数没有设置的话，则使用默认函数
+			} else if (that.state === validStates.REJECTED) {
+				handler = promiseItem.handlers.onRejected || rejectFallBack;
+			}
+
 			try {
 				value = handler(that.value)
 			} catch(e) {
@@ -93,7 +98,7 @@ var doResolve = function (promise, x) {
 		} else {
 			// 当依赖的 promise 不是 PENDING 状态时
 			// 则直接将其值和状态传递到当前 promise
-			this.transition(x.state, x.value)
+			promise.transition(x.state, x.value)
 		}
 	}
 	// 处理当 x 是对象或函数的情况
@@ -142,6 +147,10 @@ function KPromise (func) {
 	this.value = undefined;
 	this.state = validStates.PENDING;
 	this.queue = [];
+	this.handlers = {
+		onFulfilled: null,
+		onRejected: null
+	}
 	if (Utils.isFunction(func)) {
 		func(function (value) {
 			doResolve(that, value)
@@ -152,23 +161,20 @@ function KPromise (func) {
 };
 
 KPromise.prototype.then = function (onFulfilled, onRejected) {
-	var	promise = new this.constructor()
-	promise.handlers = {
-		onFulfilled: null,
-		onRejected: null
-	}
+	var	promise = new KPromise();
 	// 每个子 promise 会具有这两个属性
 	// 代表的是通过 then 方法添加的回调
 	if (Utils.isFunction(onFulfilled)) {
-		promise.handlers.onFulfilled = onFulfilled
+		promise.handlers.onFulfilled = onFulfilled;
 	}
 	if (Utils.isFunction(onRejected)) {
-		promise.handlers.onRejected = onRejected
+		promise.handlers.onRejected = onRejected;
 	}
 
-	this.queue.push(promise)
-	this.process()
-	return promise
+	this.queue.push(promise);
+	this.process();
+
+	return promise;
 }
 
 KPromise.prototype.catch = function(onRejected) {
@@ -180,7 +186,7 @@ KPromise.prototype.resolve = function(value) {
 }
 
 KPromise.prototype.reject = function(reason) {
-	this.transition((validStates.REJECTED, reason))
+	this.transition(validStates.REJECTED, reason)
 }
 
 KPromise.prototype.transition = transition
