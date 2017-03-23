@@ -28,22 +28,22 @@ var Utils = {
 	}
 }
 
-var	transition = function (state, value) {
+var transition = function (promise, state, value) {
 	if (
-			this.state === state ||
-	    arguments.length !== 2 ||
+			promise.state === state ||
+	    arguments.length !== 3 ||
 	    !Utils.isValidState(state) ||
-	    this.state !== validStates.PENDING) {
+	    promise.state !== validStates.PENDING) {
 		return ;
 	}
 
-	this.state = state;
-	this.value = value;
-	this.process();
+	promise.state = state;
+	promise.value = value;
+	runner(promise);
 }
 
-var process = function () {
-	var that = this;
+var runner = function (promise) {
+	var that = promise;
 	var fulfillFallBack = function (value) {
        return value;
      },
@@ -51,7 +51,7 @@ var process = function () {
        throw reason;
      };
 	// 最开始添加的 then 函数，此时 pengding 状态，直接返回
-	if (this.state === validStates.PENDING) {
+	if (that.state === validStates.PENDING) {
 		return ;
 	}
 
@@ -99,7 +99,7 @@ var doResolve = function (promise, x) {
 		} else {
 			// 当依赖的 promise 不是 PENDING 状态时
 			// 则直接将其值和状态传递到当前 promise
-			promise.transition(x.state, x.value)
+			transition(promise, x.state, x.value)
 		}
 	}
 	// 处理当 x 是对象或函数的情况
@@ -173,7 +173,7 @@ KPromise.prototype.then = function (onFulfilled, onRejected) {
 	}
 
 	this.queue.push(promise);
-	this.process();
+	runner(this);
 
 	return promise;
 }
@@ -183,15 +183,12 @@ KPromise.prototype.catch = function(onRejected) {
 }
 
 KPromise.prototype.resolve = function(value) {
-	this.transition(validStates.FULFILLED, value)
+	transition(this, validStates.FULFILLED, value)
 }
 
 KPromise.prototype.reject = function(reason) {
-	this.transition(validStates.REJECTED, reason)
+	transition(this, validStates.REJECTED, reason)
 }
-
-KPromise.prototype.transition = transition
-KPromise.prototype.process = process
 
 module.exports = {
     resolved: function (value) {
