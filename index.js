@@ -1,4 +1,5 @@
 "use strict";
+var immediate = require('immediate')
 
 var validStates = {
 	PENDING: 0,
@@ -23,7 +24,7 @@ var Utils = {
       (state === validStates.FULFILLED))
 	},
 	runAsync: function (func) {
-		setTimeout(func, 0)
+		immediate(func)
 	}
 }
 
