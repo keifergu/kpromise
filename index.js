@@ -218,6 +218,56 @@ KPromise.prototype.reject = function(reason) {
 	transition(this, validStates.REJECTED, reason)
 }
 
+// 其它静态方法
+
+/**
+ * Promise.all() 方法指当数组中的所有 promises 已完成，或者第一个传递的 promise（指 reject）失败时，返回 promise。
+ * @param  {Array[KPromise]} arr 要执行的 promise 数组
+ * @return {KPromise}     返回一个 
+ *
+ * var p1 = KPromise.resolve(3);
+ * var p2 = 1337;
+ * var p3 = new KPromise((resolve, reject) => {
+ *   setTimeout(resolve, 100, "foo");
+ * }); 
+ *
+ * KPromise.all([p1, p2, p3]).then(values => { 
+ *   console.log(values); // [3, 1337, "foo"] 
+ * });
+ */
+KPromise.all = function(arr) {
+	var p = new KPromise(),
+		results = [],
+		counter = 0
+	arr.forEach(function(v, k) {
+		if (Utils.isPromise(v)) {
+			v.then(function(data) {
+				results[k] = data
+				counter++
+				if (counter >= arr.length) p.resolve(results)
+			}).catch(function(err) {
+				p.reject(err)
+			})
+		} else {
+			results[k] = v
+			counter++
+			if (counter >= arr.length) p.resolve(results)
+		}
+	})
+	return p
+}
+
+/**
+ * 返回一个直接 resolve 的 promise
+ * @param  {Any} data 可以传入一个数据或一个 thenable 对象
+ * @return {KPromise}      返回一个 promise
+ */
+KPromise.resolve = function(data) {
+	return new KPromise(function(resolve) {
+		resolve(data)
+	})
+}
+
 module.exports = {
     resolved: function (value) {
         return new KPromise(function (resolve) {
