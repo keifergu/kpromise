@@ -258,6 +258,24 @@ KPromise.all = function(arr) {
 }
 
 /**
+ * Promise.race() 方法返回一个 promise，在可迭代的 resolves 或 rejects 中 promises 有一个完成或失败，将显示其值或原因。
+ * @param  {Array[KPromise]} arr promise 数组
+ * @return {KPromise}     返回一个新 promise
+ */
+KPromise.race = function(arr) {
+	var p = new KPromise()
+	arr.forEach(function(promise, key) {
+		if (Utils.isPromise(promise)) {
+			promise.then(function(value) {
+				p.resolve(value)
+			}, function(reason) {
+				p.reject(reason)
+			})
+		}
+	})
+	return p
+}
+/**
  * 返回一个直接 resolve 的 promise
  * @param  {Any} data 可以传入一个数据或一个 thenable 对象
  * @return {KPromise}      返回一个 promise
@@ -265,6 +283,12 @@ KPromise.all = function(arr) {
 KPromise.resolve = function(data) {
 	return new KPromise(function(resolve) {
 		resolve(data)
+	})
+}
+
+KPromise.reject = function(reason) {
+	return new KPromise(function(resolve, reject) {
+		reject(reason)
 	})
 }
 
